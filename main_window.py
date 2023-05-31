@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.resize(512, 512)
         self.setStyleSheet("background-image: url(background.jpg);")
         self.info_card = QLabel(
-            f'Available card information: {self.setting["initial_digits"]}******{self.setting["last_digits"]}')
+            f'Available card information: {self.setting["initial_digits"][0]}******{self.setting["last_digits"]}')
         layout = QVBoxLayout()
         self.pbar = QProgressBar(self)
         self.pbar.setValue(0)
@@ -70,8 +70,9 @@ class MainWindow(QMainWindow):
         Args:
             start (float): время начала поиска
         """
+        item = [(i, self.setting) for i in range(99999, 10000000)]
         with mp.Pool(self.value) as p:
-            for i, result in enumerate(p.map(check_hash, range(99999, 10000000))):
+            for i, result in enumerate(p.starmap(check_hash, item)):
                 if result:
                     self.update_pb(start, result)
                     p.terminate()
@@ -107,10 +108,10 @@ class MainWindow(QMainWindow):
         self.pbar.setValue(100)
         end = time.time() - start
         result_text = f'Found: {result}\n\n'
-        result_text += f'Checking the Luhn Algorithm: {algorithm_luna(result)}\n\n'
+        result_text += f'Checking the Luhn Algorithm: {algorithm_luna(result, self.setting)}\n\n'
         result_text += f'Lead time: {end:.2f} seconds'
         self.info_card.setText(
-            f'Available card information: {self.setting["initial_digits"]}{result}{self.setting["last_digits"]}')
+            f'Available card information: {self.setting["initial_digits"][0]}{result}{self.setting["last_digits"]}')
         self.result_label.setText(result_text)
 
     def update_pb_on_progress(self, i: int) -> None:
@@ -125,7 +126,7 @@ class MainWindow(QMainWindow):
     def draw_graph(self) -> None:
         """функция для рисования графика
         """
-        charting()
+        charting(self.setting)
 
 
 if __name__ == "__main__":
